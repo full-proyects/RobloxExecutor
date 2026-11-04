@@ -12,22 +12,25 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest   # trae Visual Studio 2022 con C++ completo
+    runs-on: windows-latest   # trae Visual Studio completo con C++
 
     steps:
       - name: Clonar el repo
         uses: actions/checkout@v4
 
-      # Pone msbuild en el PATH (el motivo del error anterior)
+      # Pone msbuild en el PATH
       - name: Configurar MSBuild
         uses: microsoft/setup-msbuild@v2
 
-      # Compila el proyecto Alpen (Release x64) -> genera module.dll
+      # Compila el proyecto Alpen (Release x64).
+      # El proyecto define su OutDir dentro de la carpeta de Roblox, asi que
+      # le forzamos un OutputPath local para poder encontrar la DLL facil.
       - name: Compilar con MSBuild
-        run: msbuild Alpen.vcxproj /p:Configuration=Release /p:Platform=x64 /v:minimal
+        run: msbuild Alpen.vcxproj /p:Configuration=Release /p:Platform=x64 /p:OutputPath="Alpen\x64\Release\" /v:minimal
 
-      # Renombrar module.dll -> xpe.dll (el nombre que pediste)
+      # Renombrar module.dll -> xpe.dll (shell cmd: aqui si existe "copy /Y")
       - name: Renombrar a xpe.dll
+        shell: cmd
         run: copy /Y "Alpen\x64\Release\module.dll" "Alpen\x64\Release\xpe.dll"
 
       # Te deja xpe.dll lista para descargar
