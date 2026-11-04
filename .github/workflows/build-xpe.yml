@@ -1,43 +1,32 @@
-# ============================================================
-#  xpe executor - Stealth Proyect (xpe.nettt)
-#  Compila xpe.dll en GitHub cada vez que subes un update.
-#  Descarga el resultado en: repo > Actions > artifact "xpe-dll"
-# ============================================================
 name: build-xpe
 
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:   # boton "Run workflow" para forzar la compilacion
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: windows-latest   # trae Visual Studio completo con C++
+    runs-on: windows-latest
 
     steps:
       - name: Clonar el repo
         uses: actions/checkout@v4
 
-      # Pone msbuild en el PATH
       - name: Configurar MSBuild
         uses: microsoft/setup-msbuild@v2
 
-      # Compila el proyecto Alpen (Release x64).
-      # El proyecto define su OutDir dentro de %LOCALAPPDATA%\Roblox\Versions\...
+      # Forzamos OutputPath para saber DONDE sale la DLL (no depende del OutDir del vcxproj)
       - name: Compilar con MSBuild
-        run: msbuild Alpen.vcxproj /p:Configuration=Release /p:Platform=x64 /v:minimal
+        run: msbuild Alpen.vcxproj /p:Configuration=Release /p:Platform=x64 /p:OutDir="C:\xpe\output\" /v:minimal
 
-      # La DLL compilada queda en %LOCALAPPDATA%\Roblox\Versions\version-...\module.dll
-      # Buscamos ahi (NO dentro del repo, donde hay otro module.dll que no es la compilacion)
-      - name: Copiar module.dll a xpe.dll
+      # Copiar de C:\xpe\output\module.dll a xpe.dll en el repo
+      - name: Copiar a xpe.dll
         shell: cmd
         run: |
-          set DLL=
-          for /r "%LOCALAPPDATA%\Roblox\Versions" %%F in (module.dll) do set DLL=%%F
-          echo La DLL compilada esta en: %DLL%
-          copy /Y "%DLL%" "xpe.dll"
+          copy /Y "C:\xpe\output\module.dll" "xpe.dll"
+          dir xpe.dll
 
-      # Te deja xpe.dll lista para descargar
       - name: Subir xpe.dll como artefacto
         uses: actions/upload-artifact@v4
         with:
