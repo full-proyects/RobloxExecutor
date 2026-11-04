@@ -1,14 +1,14 @@
 # ============================================================
 #  xpe executor - Stealth Proyect (xpe.nettt)
-#  Compila la DLL en GitHub cada vez que subes un update.
-#  Te deja "xpe.dll" lista para descargar en "Actions > Artifacts".
+#  Compila xpe.dll en GitHub cada vez que subes un update.
+#  Descarga el resultado en: repo > Actions > artifact "xpe-dll"
 # ============================================================
 name: build-xpe
 
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:   # te deja forzar la compilación a mano (botón "Run workflow")
+  workflow_dispatch:   # boton "Run workflow" para forzar la compilacion
 
 jobs:
   build:
@@ -18,18 +18,19 @@ jobs:
       - name: Clonar el repo
         uses: actions/checkout@v4
 
-      # Compilar el proyecto Alpen (Release x64) → genera module.dll
+      # Pone msbuild en el PATH (el motivo del error anterior)
+      - name: Configurar MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      # Compila el proyecto Alpen (Release x64) -> genera module.dll
       - name: Compilar con MSBuild
-        run: |
-          msbuild Alpen.vcxproj /p:Configuration=Release /p:Platform=x64 /v:minimal
-        shell: cmd
+        run: msbuild Alpen.vcxproj /p:Configuration=Release /p:Platform=x64 /v:minimal
 
-      # Renombrar module.dll -> xpe.dll y subirla como artefacto
-      - name: Renombrar a xpe.dll y subir
-        run: |
-          copy /Y "Alpen\x64\Release\module.dll" "Alpen\x64\Release\xpe.dll"
-        shell: cmd
+      # Renombrar module.dll -> xpe.dll (el nombre que pediste)
+      - name: Renombrar a xpe.dll
+        run: copy /Y "Alpen\x64\Release\module.dll" "Alpen\x64\Release\xpe.dll"
 
+      # Te deja xpe.dll lista para descargar
       - name: Subir xpe.dll como artefacto
         uses: actions/upload-artifact@v4
         with:
