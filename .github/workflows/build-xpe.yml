@@ -22,20 +22,24 @@ jobs:
       - name: Configurar MSBuild
         uses: microsoft/setup-msbuild@v2
 
-      # Compila el proyecto Alpen (Release x64).
-      # El proyecto define su OutDir dentro de la carpeta de Roblox, asi que
-      # le forzamos un OutputPath local para poder encontrar la DLL facil.
+      # Compila el proyecto Alpen (Release x64). El proyecto define su propio
+      # OutDir (dentro de la carpeta de Roblox), asi que despues buscamos
+      # la module.dll donde haya salido y la copiamos.
       - name: Compilar con MSBuild
-        run: msbuild Alpen.vcxproj /p:Configuration=Release /p:Platform=x64 /p:OutputPath="Alpen\x64\Release\" /v:minimal
+        run: msbuild Alpen.vcxproj /p:Configuration=Release /p:Platform=x64 /v:minimal
 
-      # Renombrar module.dll -> xpe.dll (shell cmd: aqui si existe "copy /Y")
-      - name: Renombrar a xpe.dll
+      # Buscar module.dll donde salio, copiarla como xpe.dll en la raiz del repo
+      - name: Buscar y renombrar a xpe.dll
         shell: cmd
-        run: copy /Y "Alpen\x64\Release\module.dll" "Alpen\x64\Release\xpe.dll"
+        run: |
+          set DLL=
+          for /r %%F in (module.dll) do set DLL=%%F
+          echo Encontre: %DLL%
+          copy /Y "%DLL%" "xpe.dll"
 
       # Te deja xpe.dll lista para descargar
       - name: Subir xpe.dll como artefacto
         uses: actions/upload-artifact@v4
         with:
           name: xpe-dll
-          path: Alpen/x64/Release/xpe.dll
+          path: xpe.dll
