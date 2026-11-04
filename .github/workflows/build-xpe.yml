@@ -1,0 +1,37 @@
+# ============================================================
+#  xpe executor - Stealth Proyect (xpe.nettt)
+#  Compila la DLL en GitHub cada vez que subes un update.
+#  Te deja "xpe.dll" lista para descargar en "Actions > Artifacts".
+# ============================================================
+name: build-xpe
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:   # te deja forzar la compilación a mano (botón "Run workflow")
+
+jobs:
+  build:
+    runs-on: windows-latest   # trae Visual Studio 2022 con C++ completo
+
+    steps:
+      - name: Clonar el repo
+        uses: actions/checkout@v4
+
+      # Compilar el proyecto Alpen (Release x64) → genera module.dll
+      - name: Compilar con MSBuild
+        run: |
+          msbuild Alpen.vcxproj /p:Configuration=Release /p:Platform=x64 /v:minimal
+        shell: cmd
+
+      # Renombrar module.dll -> xpe.dll y subirla como artefacto
+      - name: Renombrar a xpe.dll y subir
+        run: |
+          copy /Y "Alpen\x64\Release\module.dll" "Alpen\x64\Release\xpe.dll"
+        shell: cmd
+
+      - name: Subir xpe.dll como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: xpe-dll
+          path: Alpen/x64/Release/xpe.dll
